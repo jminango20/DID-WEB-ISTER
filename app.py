@@ -1,0 +1,63 @@
+"""
+Main Flask application entry point.
+
+Usage:
+    python app.py
+"""
+
+import os
+from flask import Flask, jsonify
+from flask_cors import CORS
+
+from config import config
+
+
+def create_app() -> Flask:
+    """
+    Application factory function.
+
+    Creates a configured Flask application with all blueprints registered.
+    Using a factory function makes it easy to create fresh app instances for testing.
+
+    Returns:
+        A configured Flask application instance.
+    """
+
+    app = Flask(__name__)
+
+    app.secret_key = config.SECRET_KEY
+    app.config['ENV'] = config.ENV
+    app.config['DEBUG'] = config.DEBUG
+
+    # Enable CORS for API, DID, and verifier routes
+    CORS(app, resources={
+        r"/api/*": {"origins": "*"},
+        r"/.well-known/*": {"origins": "*"},
+        r"/verify/*": {"origins": "*"}
+    })
+
+    # Phase 1: DID routes
+    from routes.did_routes import did_bp
+    app.register_blueprint(did_bp)
+
+    @app.route('/health')
+    def health():
+        """Health check endpoint."""
+        return jsonify({"status": "ok", "did": config.DID_METHOD})
+
+    @app.errorhandler(404)
+    def not_found(error):
+        return jsonify({"error": "Not found"}), 404
+
+    @app.errorhandler(500)
+    def internal_error(error):
+        return jsonify({"error": "Internal server error"}), 500
+
+    return app
+
+
+app = create_app()
+
+if __name__ == '__main__':
+    port = int(os.getenv('PORT', 5000))
+    app.run(host='0.0.0.0', port=port, debug=config.DEBUG)
