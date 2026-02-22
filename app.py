@@ -46,6 +46,14 @@ def create_app() -> Flask:
     app.register_blueprint(admin_bp)
     app.register_blueprint(api_bp)
 
+    # Phase 4: Wallet routes
+    from routes.wallet_routes import wallet_bp
+    app.register_blueprint(wallet_bp)
+
+    # Phase 5: Verifier routes
+    from routes.verifier_routes import verifier_bp
+    app.register_blueprint(verifier_bp)
+
     @app.route('/health')
     def health():
         """Health check endpoint."""
