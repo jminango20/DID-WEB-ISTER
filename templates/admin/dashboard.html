@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Panel de Control - ISTER Credenciales</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #f5f5f5; }
+        nav {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 16px 32px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        nav h1 { font-size: 1.3em; }
+        nav a { color: white; text-decoration: none; opacity: 0.85; }
+        nav a:hover { opacity: 1; }
+        .container { max-width: 1100px; margin: 32px auto; padding: 0 24px; }
+        .actions { margin-bottom: 24px; }
+        .btn {
+            display: inline-block;
+            padding: 12px 24px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            text-decoration: none;
+            border-radius: 8px;
+            font-weight: 600;
+        }
+        .btn:hover { opacity: 0.9; }
+        .card {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 2px 12px rgba(0,0,0,0.08);
+            overflow: hidden;
+        }
+        table { width: 100%; border-collapse: collapse; }
+        th {
+            background: #f9f9f9;
+            padding: 14px 16px;
+            text-align: left;
+            font-size: 12px;
+            text-transform: uppercase;
+            color: #999;
+            letter-spacing: 0.5px;
+        }
+        td { padding: 14px 16px; border-top: 1px solid #f0f0f0; color: #333; }
+        tr:hover td { background: #fafafa; }
+        .badge {
+            display: inline-block;
+            padding: 3px 10px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+        .badge-claimed { background: #d4edda; color: #155724; }
+        .badge-pending { background: #fff3cd; color: #856404; }
+        .empty { text-align: center; padding: 48px; color: #999; }
+        .alert {
+            padding: 12px 16px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+        .alert.success { background: #d4edda; color: #155724; }
+        .alert.error { background: #f8d7da; color: #721c24; }
+    </style>
+</head>
+<body>
+    <nav>
+        <h1>🎓 Emisor de Credenciales ISTER</h1>
+        <a href="{{ url_for('admin.logout') }}">Cerrar sesión</a>
+    </nav>
+
+    <div class="container">
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% for category, message in messages %}
+                <div class="alert {{ category }}">{{ message }}</div>
+            {% endfor %}
+        {% endwith %}
+
+        <div class="actions">
+            <a href="{{ url_for('admin.issue_credential') }}" class="btn">+ Emitir Nueva Credencial</a>
+        </div>
+
+        <div class="card">
+            {% if credentials %}
+            <table>
+                <thead>
+                    <tr>
+                        <th>Estudiante</th>
+                        <th>Correo</th>
+                        <th>Curso</th>
+                        <th>Emitido</th>
+                        <th>Estado</th>
+                        <th>ID de Reclamo</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for c in credentials %}
+                    <tr>
+                        <td>{{ c.student_name }}</td>
+                        <td>{{ c.student_email }}</td>
+                        <td>{{ c.course_name }}</td>
+                        <td>{{ c.issued_at[:10] }}</td>
+                        <td>
+                            {% if c.claimed %}
+                                <span class="badge badge-claimed">Reclamado</span>
+                            {% else %}
+                                <span class="badge badge-pending">Pendiente</span>
+                            {% endif %}
+                        </td>
+                        <td><code>{{ c.claim_id }}</code></td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+            {% else %}
+            <div class="empty">
+                <p>Aún no se han emitido credenciales.</p>
+                <p><a href="{{ url_for('admin.issue_credential') }}">Emitir la primera credencial →</a></p>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</body>
+</html>

@@ -40,6 +40,12 @@ def create_app() -> Flask:
     from routes.did_routes import did_bp
     app.register_blueprint(did_bp)
 
+    # Phase 3: Admin and API routes
+    from routes.admin_routes import admin_bp
+    from routes.api_routes import api_bp
+    app.register_blueprint(admin_bp)
+    app.register_blueprint(api_bp)
+
     @app.route('/health')
     def health():
         """Health check endpoint."""
