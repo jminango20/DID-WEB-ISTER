@@ -132,6 +132,9 @@ async function loadClaimPage(claimId) {
         document.getElementById('c-issued').textContent =
             new Date(credential.issuanceDate).toLocaleDateString('es-EC');
 
+        // Siempre marcar como reclamada al cargar la página (idempotente)
+        fetch(`/api/credentials/${claimId}/claim`, { method: 'POST' });
+
         // Verificar si ya está guardada
         if (getCredentialById(credential.id)) {
             saveBtn.textContent = '✓ Ya guardada en tu wallet';
@@ -140,9 +143,6 @@ async function loadClaimPage(claimId) {
 
         saveBtn.addEventListener('click', async () => {
             const saved = saveCredential(credential);
-
-            // Marcar como reclamada en el servidor
-            await fetch(`/api/credentials/${claimId}/claim`, { method: 'POST' });
 
             if (saved) {
                 saveBtn.textContent = '✓ Guardada en tu wallet';

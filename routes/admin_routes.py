@@ -9,8 +9,9 @@ Provides a web interface for the issuer to:
 All routes require admin authentication via Flask session.
 """
 
+import io
 from functools import wraps
-from flask import Blueprint, render_template, request, redirect, url_for, session, flash, jsonify
+from flask import Blueprint, render_template, request, redirect, url_for, session, flash, jsonify, send_file
 
 from config import config
 
@@ -135,3 +136,23 @@ def issue_credential():
         flash(f'Error issuing credential: {str(e)}', 'error')
 
     return render_template('admin/issue_credential.html')
+
+
+@admin_bp.route('/qr/<claim_id>')
+@require_admin
+def qr_code(claim_id: str):
+    """Return a QR code PNG for the given claim URL."""
+    import qrcode
+
+    claim_url = request.host_url.rstrip('/') + f'/wallet/claim/{claim_id}'
+
+    qr = qrcode.QRCode(box_size=8, border=2)
+    qr.add_data(claim_url)
+    qr.make(fit=True)
+    img = qr.make_image(fill_color='#333333', back_color='white')
+
+    buf = io.BytesIO()
+    img.save(buf, format='PNG')
+    buf.seek(0)
+
+    return send_file(buf, mimetype='image/png')

@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Reclamar Credencial - ISTER</title>
+    <link rel="manifest" href="/static/manifest.json">
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body {
@@ -115,6 +116,9 @@
     <script>
         const claimId = "{{ claim_id }}";
         document.addEventListener('DOMContentLoaded', () => loadClaimPage(claimId));
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.register('/static/service-worker.js');
+        }
     </script>
 </body>
 </html>

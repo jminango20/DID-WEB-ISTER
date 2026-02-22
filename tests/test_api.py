@@ -129,7 +129,8 @@ class TestGetCredentialAPI:
 
 class TestClaimCredentialAPI:
 
-    def test_claim_already_claimed_returns_409(self, client):
+    def test_claim_already_claimed_is_idempotent(self, client):
+        """Claim endpoint is idempotent: claiming an already-claimed credential returns 200."""
         mock_supabase = MagicMock()
         mock_supabase.table.return_value.select.return_value.eq.return_value.execute.return_value \
             = MagicMock(data=[{'claimed': True}])
@@ -137,7 +138,7 @@ class TestClaimCredentialAPI:
         with patch('utils.database.get_supabase_client', return_value=mock_supabase):
             response = client.post('/api/credentials/CLAIMED00000001/claim')
 
-        assert response.status_code == 409
+        assert response.status_code == 200
 
     def test_claim_not_found_returns_404(self, client):
         mock_supabase = MagicMock()

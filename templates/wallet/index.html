@@ -117,6 +117,9 @@
     <script src="/static/js/wallet.js"></script>
     <script>
         document.addEventListener('DOMContentLoaded', renderWalletHome);
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.register('/static/service-worker.js');
+        }
     </script>
 </body>
 </html>

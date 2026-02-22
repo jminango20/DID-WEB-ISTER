@@ -163,13 +163,12 @@ def claim_credential(claim_id: str):
     if not result.data:
         raise ClaimNotFoundError()
 
-    if result.data[0]['claimed']:
-        raise AlreadyClaimedError()
-
-    supabase.table('credentials').update({
-        'claimed': True,
-        'claimed_at': datetime.now(timezone.utc).isoformat(),
-    }).eq('claim_id', claim_id).execute()
+    # Idempotent: update claimed status even if already claimed
+    if not result.data[0]['claimed']:
+        supabase.table('credentials').update({
+            'claimed': True,
+            'claimed_at': datetime.now(timezone.utc).isoformat(),
+        }).eq('claim_id', claim_id).execute()
 
     return jsonify({"success": True, "data": {"message": "Credential claimed successfully"}})
 

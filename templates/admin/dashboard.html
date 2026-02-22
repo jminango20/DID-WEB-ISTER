@@ -65,6 +65,47 @@
         }
         .alert.success { background: #d4edda; color: #155724; }
         .alert.error { background: #f8d7da; color: #721c24; }
+        .btn-qr {
+            padding: 4px 10px;
+            background: #f0f4ff;
+            color: #667eea;
+            border: 1px solid #667eea;
+            border-radius: 6px;
+            font-size: 12px;
+            cursor: pointer;
+        }
+        .btn-qr:hover { background: #667eea; color: white; }
+        /* QR Modal */
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.5);
+            z-index: 100;
+            align-items: center;
+            justify-content: center;
+        }
+        .modal-overlay.active { display: flex; }
+        .modal {
+            background: white;
+            border-radius: 16px;
+            padding: 32px;
+            text-align: center;
+            max-width: 360px;
+            width: 90%;
+        }
+        .modal h3 { margin-bottom: 8px; color: #333; }
+        .modal p { color: #888; font-size: 0.85em; margin-bottom: 16px; word-break: break-all; }
+        .modal img { border-radius: 8px; max-width: 100%; }
+        .modal-close {
+            margin-top: 16px;
+            padding: 8px 20px;
+            background: #f0f0f0;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 0.9em;
+        }
     </style>
 </head>
 <body>
@@ -95,6 +136,7 @@
                         <th>Emitido</th>
                         <th>Estado</th>
                         <th>ID de Reclamo</th>
+                        <th>QR</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -112,6 +154,9 @@
                             {% endif %}
                         </td>
                         <td><code>{{ c.claim_id }}</code></td>
+                        <td>
+                            <button class="btn-qr" onclick="showQR('{{ c.claim_id }}')">📷 QR</button>
+                        </td>
                     </tr>
                     {% endfor %}
                 </tbody>
@@ -124,5 +169,31 @@
             {% endif %}
         </div>
     </div>
+
+    <!-- QR Modal -->
+    <div class="modal-overlay" id="qr-modal">
+        <div class="modal">
+            <h3>Código QR de Reclamo</h3>
+            <p id="qr-url"></p>
+            <img id="qr-img" src="" alt="QR Code">
+            <br>
+            <button class="modal-close" onclick="closeQR()">Cerrar</button>
+        </div>
+    </div>
+
+    <script>
+        function showQR(claimId) {
+            const url = window.location.origin + '/wallet/claim/' + claimId;
+            document.getElementById('qr-url').textContent = url;
+            document.getElementById('qr-img').src = '/admin/qr/' + claimId;
+            document.getElementById('qr-modal').classList.add('active');
+        }
+        function closeQR() {
+            document.getElementById('qr-modal').classList.remove('active');
+        }
+        document.getElementById('qr-modal').addEventListener('click', function(e) {
+            if (e.target === this) closeQR();
+        });
+    </script>
 </body>
 </html>
