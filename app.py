@@ -70,6 +70,15 @@ def create_app() -> Flask:
     return app
 
 
+def ensure_keys_exist() -> None:
+    """Generate Ed25519 keys on first startup if they don't exist yet."""
+    if not os.path.exists(config.PRIVATE_KEY_PATH):
+        from generate_keys import generate_ed25519_keypair
+        print("Keys not found — generating on first startup...")
+        generate_ed25519_keypair()
+
+
+ensure_keys_exist()
 app = create_app()
 
 if __name__ == '__main__':
