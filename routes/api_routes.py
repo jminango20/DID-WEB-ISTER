@@ -147,6 +147,43 @@ def get_credential(claim_id: str):
     return jsonify({"success": True, "data": row['credential_data']})
 
 
+@api_bp.route('/credentials/<claim_id>/qr-verify', methods=['GET'])
+@handle_errors
+def qr_verify(claim_id: str):
+    """Return a QR code PNG containing the full credential JSON for verification."""
+    import io
+    import json as _json
+    import qrcode
+    from flask import send_file
+    from utils.database import get_supabase_client
+
+    supabase = get_supabase_client()
+    result = supabase.table('credentials') \
+        .select('credential_data') \
+        .eq('claim_id', claim_id) \
+        .execute()
+
+    if not result.data:
+        raise ClaimNotFoundError()
+
+    credential_json = _json.dumps(result.data[0]['credential_data'], separators=(',', ':'))
+
+    qr = qrcode.QRCode(
+        box_size=6,
+        border=2,
+        error_correction=qrcode.constants.ERROR_CORRECT_L
+    )
+    qr.add_data(credential_json)
+    qr.make(fit=True)
+    img = qr.make_image(fill_color='#333333', back_color='white')
+
+    buf = io.BytesIO()
+    img.save(buf, format='PNG')
+    buf.seek(0)
+
+    return send_file(buf, mimetype='image/png')
+
+
 @api_bp.route('/credentials/<claim_id>/claim', methods=['POST'])
 @handle_errors
 def claim_credential(claim_id: str):
