@@ -194,6 +194,12 @@
     <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
     <script src="/static/js/verifier.js"></script>
     <script>
+        // Auto-verify if ?claim=CLAIM_ID is in the URL (native QR scanner flow)
+        (function () {
+            const claimId = new URLSearchParams(window.location.search).get('claim');
+            if (claimId) verifyByClaim(claimId);
+        })();
+
         let html5QrCode = null;
 
         async function startQrScanner() {
@@ -206,9 +212,16 @@
             try {
                 await html5QrCode.start(
                     { facingMode: 'environment' },
-                    { fps: 10, qrbox: { width: 250, height: 250 } },
+                    { fps: 10, qrbox: { width: 280, height: 280 } },
                     (decodedText) => {
                         stopQrScanner();
+                        // Check if it's a verification URL with ?claim=
+                        try {
+                            const url = new URL(decodedText);
+                            const claimId = url.searchParams.get('claim');
+                            if (claimId) { verifyByClaim(claimId); return; }
+                        } catch (_) {}
+                        // Fallback: treat as raw JSON
                         document.getElementById('credentialInput').value = decodedText;
                         runVerification();
                     },

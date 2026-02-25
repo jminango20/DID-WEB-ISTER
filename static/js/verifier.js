@@ -133,3 +133,18 @@ function resetVerifier() {
     document.getElementById('results').style.display = 'none';
     document.getElementById('results').innerHTML = '';
 }
+
+async function verifyByClaim(claimId) {
+    const resultsEl = document.getElementById('results');
+    resultsEl.style.display = 'block';
+    resultsEl.innerHTML = '<p style="text-align:center;color:#667eea;padding:24px;">Cargando credencial...</p>';
+    try {
+        const res = await fetch(`/api/credentials/${claimId}`);
+        const data = await res.json();
+        if (!data.success) { showError(data.error || 'Credencial no encontrada.'); return; }
+        document.getElementById('credentialInput').value = JSON.stringify(data.data, null, 2);
+        runVerification();
+    } catch (e) {
+        showError('Error al cargar la credencial: ' + e.message);
+    }
+}

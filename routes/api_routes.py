@@ -166,14 +166,14 @@ def qr_verify(claim_id: str):
     if not result.data:
         raise ClaimNotFoundError()
 
-    credential_json = _json.dumps(result.data[0]['credential_data'], separators=(',', ':'))
+    verify_url = request.host_url.rstrip('/') + f'/verify?claim={claim_id}'
 
     qr = qrcode.QRCode(
-        box_size=6,
+        box_size=8,
         border=2,
-        error_correction=qrcode.constants.ERROR_CORRECT_L
+        error_correction=qrcode.constants.ERROR_CORRECT_M
     )
-    qr.add_data(credential_json)
+    qr.add_data(verify_url)
     qr.make(fit=True)
     img = qr.make_image(fill_color='#333333', back_color='white')
 
