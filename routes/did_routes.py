@@ -36,9 +36,19 @@ def get_did_document():
     if os.path.exists(did_json_path):
         with open(did_json_path, 'r', encoding='utf-8') as f:
             did_document = json.load(f)
-        # Regenerate if domain has changed (e.g. moved from Replit to Render)
+        # Regenerate if domain changed OR if the public key on disk no longer matches
+        # the current key file (happens when PRIVATE_KEY_B64 changes between restarts)
         if did_document.get('id') != f"did:web:{config.DID_WEB_DOMAIN}":
             did_document = None
+        else:
+            try:
+                fresh = create_did_document(config.DID_WEB_DOMAIN, config.PUBLIC_KEY_PATH)
+                cached_key = did_document.get('verificationMethod', [{}])[0].get('publicKeyMultibase')
+                fresh_key = fresh.get('verificationMethod', [{}])[0].get('publicKeyMultibase')
+                if cached_key != fresh_key:
+                    did_document = None  # Key changed — force regeneration
+            except Exception:
+                did_document = None
 
     if not did_document:
         try:

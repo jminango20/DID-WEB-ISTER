@@ -104,12 +104,10 @@ def check_credential():
         # (critical when running locally or when the domain isn't publicly reachable yet).
         try:
             if issuer_did == config.DID_METHOD:
-                local_did_path = os.path.join('static', '.well-known', 'did.json')
-                if os.path.exists(local_did_path):
-                    with open(local_did_path, 'r') as f:
-                        did_doc = json.load(f)
-                else:
-                    did_doc = create_did_document(config.DID_WEB_DOMAIN, config.PUBLIC_KEY_PATH)
+                # Always build from the current key file — never trust the cached did.json
+                # on disk, which may have been written with a different key (e.g. after
+                # env-var-only restarts on Render that preserve the filesystem).
+                did_doc = create_did_document(config.DID_WEB_DOMAIN, config.PUBLIC_KEY_PATH)
             else:
                 did_doc = fetch_did_document(issuer_did)
         except Exception as e:
