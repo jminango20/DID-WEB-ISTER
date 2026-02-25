@@ -14,63 +14,6 @@ from utils.did import fetch_did_document, create_did_document
 verifier_bp = Blueprint('verifier', __name__, url_prefix='/verify')
 
 
-@verifier_bp.route('/debug/<claim_id>', methods=['GET'])
-def debug_verification(claim_id: str):
-    """Temporary debug endpoint — shows exactly what is being signed vs verified."""
-    import base64
-    import json as _json
-    from utils.database import get_supabase_client
-    from utils.crypto import _b64url_decode
-
-    supabase = get_supabase_client()
-    result = supabase.table('credentials').select('credential_data').eq('claim_id', claim_id).execute()
-    if not result.data:
-        return jsonify({'error': 'Credential not found'}), 404
-
-    credential = result.data[0]['credential_data']
-    proof = credential.get('proof', {})
-    jws = proof.get('jws', '')
-    issuer_did = credential.get('issuer', '')
-
-    # Canonical JSON (what was signed / what is verified)
-    credential_copy = {k: v for k, v in credential.items() if k != 'proof'}
-    canonical = _json.dumps(credential_copy, sort_keys=True, separators=(',', ':'))
-
-    # Public key from DID doc
-    try:
-        local_did_path = os.path.join('static', '.well-known', 'did.json')
-        if os.path.exists(local_did_path):
-            with open(local_did_path, 'r') as f:
-                did_doc = _json.load(f)
-            key_source = 'local_file'
-        else:
-            did_doc = create_did_document(config.DID_WEB_DOMAIN, config.PUBLIC_KEY_PATH)
-            key_source = 'generated_from_pem'
-        public_key_multibase = did_doc['verificationMethod'][0]['publicKeyMultibase']
-    except Exception as e:
-        return jsonify({'error': f'DID doc error: {str(e)}'}), 500
-
-    # JWS parts
-    jws_parts = jws.split('.')
-    sig_b64 = jws_parts[2] if len(jws_parts) == 3 else ''
-
-    # Actual verify
-    is_valid = verify_credential_signature(credential, public_key_multibase)
-
-    return jsonify({
-        'claim_id': claim_id,
-        'issuer_in_credential': issuer_did,
-        'config_did_method': config.DID_METHOD,
-        'issuer_matches_config': issuer_did == config.DID_METHOD,
-        'key_source': key_source,
-        'public_key_multibase': public_key_multibase,
-        'jws': jws,
-        'canonical_json': canonical,
-        'canonical_length': len(canonical),
-        'signature_b64url': sig_b64,
-        'verification_result': is_valid,
-    })
-
 
 @verifier_bp.route('/', methods=['GET'])
 def index():
