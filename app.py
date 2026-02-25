@@ -71,8 +71,26 @@ def create_app() -> Flask:
 
 
 def ensure_keys_exist() -> None:
-    """Generate Ed25519 keys on first startup if they don't exist yet."""
-    if not os.path.exists(config.PRIVATE_KEY_PATH):
+    """Restore keys from PRIVATE_KEY_B64 env var (Render/prod) or generate fresh (local dev)."""
+    private_key_b64 = os.getenv('PRIVATE_KEY_B64')
+
+    if private_key_b64:
+        import base64 as _b64
+        from cryptography.hazmat.primitives import serialization as _ser
+        os.makedirs('keys', exist_ok=True)
+        private_pem = _b64.b64decode(private_key_b64)
+        with open(config.PRIVATE_KEY_PATH, 'wb') as f:
+            f.write(private_pem)
+        private_key = _ser.load_pem_private_key(private_pem, password=None)
+        public_pem = private_key.public_key().public_bytes(
+            encoding=_ser.Encoding.PEM,
+            format=_ser.PublicFormat.SubjectPublicKeyInfo
+        )
+        with open(config.PUBLIC_KEY_PATH, 'wb') as f:
+            f.write(public_pem)
+        print("Keys restored from PRIVATE_KEY_B64 environment variable.")
+
+    elif not os.path.exists(config.PRIVATE_KEY_PATH):
         from generate_keys import generate_ed25519_keypair
         print("Keys not found — generating on first startup...")
         generate_ed25519_keypair()

@@ -31,10 +31,16 @@ def get_did_document():
 
     did_json_path = os.path.join('static', '.well-known', 'did.json')
 
+    did_document = None
+
     if os.path.exists(did_json_path):
         with open(did_json_path, 'r', encoding='utf-8') as f:
             did_document = json.load(f)
-    else:
+        # Regenerate if domain has changed (e.g. moved from Replit to Render)
+        if did_document.get('id') != f"did:web:{config.DID_WEB_DOMAIN}":
+            did_document = None
+
+    if not did_document:
         try:
             did_document = create_did_document(
                 domain=config.DID_WEB_DOMAIN,

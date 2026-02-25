@@ -63,6 +63,9 @@ htmlcov/
 .upm/
 replit.nix
 
+# DID document (regenerated per-domain at runtime)
+static/.well-known/did.json
+
 # Claude Code local files (personal, not shared)
 CLAUDE.local.md
 .claude/settings.local.json
